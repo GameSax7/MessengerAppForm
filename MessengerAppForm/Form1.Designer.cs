@@ -130,6 +130,7 @@
             lblErrorMessage.AutoSize = true;
             lblErrorMessage.BackColor = Color.Transparent;
             lblErrorMessage.Font = new Font("Segoe UI", 16F);
+            lblErrorMessage.ForeColor = Color.Red;
             lblErrorMessage.Location = new Point(56, 425);
             lblErrorMessage.Name = "lblErrorMessage";
             lblErrorMessage.Size = new Size(154, 30);
