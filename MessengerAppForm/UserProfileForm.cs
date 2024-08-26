@@ -134,5 +134,13 @@ namespace MessengerAppForm
             loginForm.Show();
             this.Close();
         }
+
+        private void btnGoToChat_Click(object sender, EventArgs e)
+        {
+            AllChatForm chatForm = new AllChatForm(currentUser);
+            chatForm.Show();
+            this.Hide(); // Скрываем форму профиля
+        }
+
     }
 }

@@ -119,6 +119,7 @@
             label4.AutoSize = true;
             label4.BackColor = Color.Transparent;
             label4.Font = new Font("Georgia", 43F);
+            label4.ForeColor = Color.Red;
             label4.Location = new Point(53, 106);
             label4.Name = "label4";
             label4.Size = new Size(263, 66);

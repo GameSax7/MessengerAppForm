@@ -131,4 +131,18 @@ public class DatabaseHelper
         }
         return (photoPath, aboutMe);
     }
+    public void SendMessage(string username, string message)
+    {
+        using (var connection = new MySqlConnection(_connectionString))
+        {
+            connection.Open();
+            string query = "INSERT INTO ChatMessages (Username, Message) VALUES (@Username, @Message)";
+            using (var command = new MySqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@Username", username);
+                command.Parameters.AddWithValue("@Message", message);
+                command.ExecuteNonQuery();
+            }
+        }
+    }
 }
