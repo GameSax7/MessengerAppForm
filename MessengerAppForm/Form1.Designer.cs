@@ -96,9 +96,9 @@
             // 
             // btnRegister
             // 
-            btnRegister.Location = new Point(275, 364);
+            btnRegister.Location = new Point(56, 529);
             btnRegister.Name = "btnRegister";
-            btnRegister.Size = new Size(222, 63);
+            btnRegister.Size = new Size(161, 35);
             btnRegister.TabIndex = 7;
             btnRegister.Text = "Зарегистрироваться";
             btnRegister.UseVisualStyleBackColor = true;
@@ -106,9 +106,9 @@
             // 
             // btnLogin
             // 
-            btnLogin.Location = new Point(272, 279);
+            btnLogin.Location = new Point(56, 479);
             btnLogin.Name = "btnLogin";
-            btnLogin.Size = new Size(225, 63);
+            btnLogin.Size = new Size(161, 34);
             btnLogin.TabIndex = 8;
             btnLogin.Text = "Вход";
             btnLogin.UseVisualStyleBackColor = true;
@@ -130,7 +130,7 @@
             lblErrorMessage.AutoSize = true;
             lblErrorMessage.BackColor = Color.Transparent;
             lblErrorMessage.Font = new Font("Segoe UI", 16F);
-            lblErrorMessage.Location = new Point(102, 500);
+            lblErrorMessage.Location = new Point(56, 425);
             lblErrorMessage.Name = "lblErrorMessage";
             lblErrorMessage.Size = new Size(154, 30);
             lblErrorMessage.TabIndex = 10;
