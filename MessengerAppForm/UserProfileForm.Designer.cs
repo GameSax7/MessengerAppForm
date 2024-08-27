@@ -38,6 +38,7 @@
             label2 = new Label();
             label3 = new Label();
             label4 = new Label();
+            btnGoToChat = new Button();
             ((System.ComponentModel.ISupportInitialize)picProfilePhoto).BeginInit();
             SuspendLayout();
             // 
@@ -142,6 +143,16 @@
             label4.TabIndex = 10;
             label4.Text = "Мой email";
             // 
+            // btnGoToChat
+            // 
+            btnGoToChat.Location = new Point(231, 401);
+            btnGoToChat.Name = "btnGoToChat";
+            btnGoToChat.Size = new Size(307, 23);
+            btnGoToChat.TabIndex = 11;
+            btnGoToChat.Text = "Войти в общий чат";
+            btnGoToChat.UseVisualStyleBackColor = true;
+            this.btnGoToChat.Click += new System.EventHandler(this.btnGoToChat_Click);
+            // 
             // UserProfileForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -149,6 +160,7 @@
             BackgroundImage = Properties.Resources._171848470090491;
             BackgroundImageLayout = ImageLayout.Stretch;
             ClientSize = new Size(800, 450);
+            Controls.Add(btnGoToChat);
             Controls.Add(label4);
             Controls.Add(label3);
             Controls.Add(label2);
@@ -178,5 +190,6 @@
         private Label label2;
         private Label label3;
         private Label label4;
+        private Button btnGoToChat;
     }
 }

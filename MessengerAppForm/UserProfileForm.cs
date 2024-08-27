@@ -134,11 +134,5 @@ namespace MessengerAppForm
             loginForm.Show();
             this.Close();
         }
-        private void btnOpenRegistrationForm_Click(object sender, EventArgs e)
-        {
-            RegistrationForm registrationForm = new RegistrationForm();
-            registrationForm.Show(); // или ShowDialog(), если хотите, чтобы форма была модальной
-        }
-
     }
 }
