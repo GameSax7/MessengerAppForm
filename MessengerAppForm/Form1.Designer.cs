@@ -30,10 +30,8 @@
         {
             lblUsername = new Label();
             lblPassword = new Label();
-            lblEmail = new Label();
             txtUsername = new TextBox();
             txtPassword = new TextBox();
-            txtEmail = new TextBox();
             btnRegister = new Button();
             btnLogin = new Button();
             label4 = new Label();
@@ -62,16 +60,6 @@
             lblPassword.TabIndex = 1;
             lblPassword.Text = "Пароль";
             // 
-            // lblEmail
-            // 
-            lblEmail.AutoSize = true;
-            lblEmail.BackColor = Color.White;
-            lblEmail.Location = new Point(3, 88);
-            lblEmail.Name = "lblEmail";
-            lblEmail.Size = new Size(36, 15);
-            lblEmail.TabIndex = 2;
-            lblEmail.Text = "Email";
-            // 
             // txtUsername
             // 
             txtUsername.BackColor = Color.White;
@@ -86,13 +74,6 @@
             txtPassword.Name = "txtPassword";
             txtPassword.Size = new Size(161, 23);
             txtPassword.TabIndex = 4;
-            // 
-            // txtEmail
-            // 
-            txtEmail.Location = new Point(3, 106);
-            txtEmail.Name = "txtEmail";
-            txtEmail.Size = new Size(161, 23);
-            txtEmail.TabIndex = 5;
             // 
             // btnRegister
             // 
@@ -146,13 +127,10 @@
             flowLayoutPanel.Controls.Add(txtUsername);
             flowLayoutPanel.Controls.Add(lblPassword);
             flowLayoutPanel.Controls.Add(txtPassword);
-            flowLayoutPanel.Controls.Add(lblEmail);
-            flowLayoutPanel.Controls.Add(txtEmail);
             flowLayoutPanel.Location = new Point(53, 279);
             flowLayoutPanel.Name = "flowLayoutPanel";
-            flowLayoutPanel.Size = new Size(169, 132);
+            flowLayoutPanel.Size = new Size(169, 90);
             flowLayoutPanel.TabIndex = 11;
-            flowLayoutPanel.Visible = false;
             // 
             // Form1
             // 
@@ -178,10 +156,8 @@
 
         private Label lblUsername;
         private Label lblPassword;
-        private Label lblEmail;
         private TextBox txtUsername;
         private TextBox txtPassword;
-        private TextBox txtEmail;
         private Button btnRegister;
         private Button btnLogin;
         private Label label4;
