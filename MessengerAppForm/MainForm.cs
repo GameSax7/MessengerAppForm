@@ -6,12 +6,12 @@ using System.Windows.Forms;
 namespace MessengerAppForm
 {
     
-    public partial class Form1 : Form
+    public partial class MainForm : Form
 
     {
         private User currentUser;
 
-        public Form1()
+        public MainForm()
         {
             InitializeComponent();
         }
@@ -104,7 +104,7 @@ namespace MessengerAppForm
         private void btnLogout_Click(object sender, EventArgs e)
         {
             currentUser = null;
-            Form loginForm = new Form1();
+            Form loginForm = new MainForm();
             loginForm.Show();
             this.Close();
         }

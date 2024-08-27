@@ -130,7 +130,7 @@ namespace MessengerAppForm
         private void btnLogout_Click(object sender, EventArgs e)
         {
             currentUser = null;
-            Form loginForm = new Form1();
+            Form loginForm = new MainForm();
             loginForm.Show();
             this.Close();
         }
