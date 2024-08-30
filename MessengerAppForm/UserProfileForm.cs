@@ -27,7 +27,7 @@ namespace MessengerAppForm
 
         private void LoadUserData()
         {
-            using (MySqlConnection connection = new MySqlConnection("Server=188.225.45.127;Port=3306;Database=MessengerDB;User ID=root;Password=root;"))
+            using (MySqlConnection connection = new MySqlConnection("Server=188.225.45.127;Port=3306;Database=MessengerDB;User ID=root;Password=MessengerDB;"))
             {
                 try
                 {
@@ -70,7 +70,7 @@ namespace MessengerAppForm
 
         public void SaveUserProfile(string username, byte[] profilePicture, string aboutMe)
         {
-            using (MySqlConnection connection = new MySqlConnection("Server=188.225.45.127;Port=3306;Database=MessengerDB;User ID=root;Password=root;"))
+            using (MySqlConnection connection = new MySqlConnection("Server=188.225.45.127;Port=3306;Database=MessengerDB;User ID=root;Password=MessengerDB;"))
             {
                 try
                 {
@@ -130,9 +130,15 @@ namespace MessengerAppForm
         private void btnLogout_Click(object sender, EventArgs e)
         {
             currentUser = null;
-            Form loginForm = new MainForm();
+            MainForm loginForm = new MainForm();
             loginForm.Show();
             this.Close();
+        }
+
+        private void btnGoToChat_Click(object sender, EventArgs e)
+        {
+            AllChatForm allChatForm = new AllChatForm(username); // Передаем имя пользователя
+            allChatForm.Show();
         }
     }
 }

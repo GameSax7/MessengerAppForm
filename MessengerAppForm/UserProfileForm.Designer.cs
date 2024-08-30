@@ -151,6 +151,7 @@
             btnGoToChat.TabIndex = 11;
             btnGoToChat.Text = "Войти в общий чат";
             btnGoToChat.UseVisualStyleBackColor = true;
+            btnGoToChat.Click += btnGoToChat_Click;
             // 
             // UserProfileForm
             // 

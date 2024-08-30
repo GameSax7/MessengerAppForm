@@ -56,7 +56,7 @@ namespace MessengerAppForm
 
                 // Хэширование пароля
                 string passwordHash = HashPassword(password);
-                string connectionString = "Server=188.225.45.127;Port=3306;Database=MessengerDB;User ID=root;Password=root;";
+                string connectionString = "Server=188.225.45.127;Port=3306;Database=MessengerDB;User ID=root;Password=MessengerDB;";
                 DatabaseHelper dbHelper = new DatabaseHelper(connectionString);
 
                 // Регистрация пользователя
