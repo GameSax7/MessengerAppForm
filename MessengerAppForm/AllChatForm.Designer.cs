@@ -35,42 +35,44 @@
             // 
             // txtMessageInput
             // 
-            txtMessageInput.Location = new Point(37, 380);
+            txtMessageInput.Location = new Point(37, 405);
             txtMessageInput.Name = "txtMessageInput";
-            txtMessageInput.Size = new Size(465, 23);
+            txtMessageInput.Size = new Size(645, 23);
             txtMessageInput.TabIndex = 0;
             // 
             // btnSendMessage
             // 
-            btnSendMessage.Location = new Point(698, 379);
+            btnSendMessage.Location = new Point(698, 405);
             btnSendMessage.Name = "btnSendMessage";
             btnSendMessage.Size = new Size(75, 23);
             btnSendMessage.TabIndex = 1;
-            btnSendMessage.Text = "button1";
+            btnSendMessage.Text = "Отправить";
             btnSendMessage.UseVisualStyleBackColor = true;
-            this.btnSendMessage.Click += new System.EventHandler(this.btnSendMessage_Click);
+            btnSendMessage.Click += btnSendMessage_Click;
             // 
             // txtChatHistory
             // 
+            txtChatHistory.BackColor = SystemColors.Control;
             txtChatHistory.Location = new Point(37, 37);
             txtChatHistory.Multiline = true;
             txtChatHistory.Name = "txtChatHistory";
-            this.txtChatHistory.ReadOnly = true;
-            this.txtChatHistory.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            txtChatHistory.Size = new Size(736, 318);
+            txtChatHistory.ReadOnly = true;
+            txtChatHistory.ScrollBars = ScrollBars.Vertical;
+            txtChatHistory.Size = new Size(736, 351);
             txtChatHistory.TabIndex = 2;
             // 
             // AllChatForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
+            BackgroundImage = Properties.Resources.c1bd1867478f40319407319e9a38;
             ClientSize = new Size(800, 450);
             Controls.Add(txtChatHistory);
             Controls.Add(btnSendMessage);
             Controls.Add(txtMessageInput);
             Name = "AllChatForm";
             Text = "AllChatForm";
-            this.Load += new System.EventHandler(this.AllChatForm_Load);
+            Load += AllChatForm_Load;
             ResumeLayout(false);
             PerformLayout();
         }
