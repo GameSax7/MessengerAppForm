@@ -1,5 +1,4 @@
-﻿using Microsoft.VisualBasic.ApplicationServices;
-using MySql.Data.MySqlClient;
+﻿using MySql.Data.MySqlClient;
 using System;
 using System.Drawing;
 using System.IO;
@@ -100,8 +99,7 @@ namespace MessengerAppForm
             }
         }
 
-
-        public void SaveUserProfile(string username, byte[] profilePicture, string aboutMe)
+        private void SaveUserProfile(string username, byte[] profilePicture, string aboutMe)
         {
             using (MySqlConnection connection = new MySqlConnection("Server=188.225.45.127;Port=3306;Database=MessengerDB;User ID=root;Password=MessengerDB;"))
             {
@@ -219,6 +217,5 @@ namespace MessengerAppForm
                 MessageBox.Show("Не удалось открыть профиль пользователя.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
     }
 }

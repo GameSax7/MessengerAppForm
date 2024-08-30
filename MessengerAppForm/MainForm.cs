@@ -50,16 +50,28 @@ namespace MessengerAppForm
 
             if (isAuthenticated)
             {
-                MessageBox.Show("Вы успешно вошли в систему!", "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                UserProfileForm userProfileForm = new UserProfileForm(username);
-                userProfileForm.Show();
-                this.Hide(); // Скрываем текущую форму логина
+                // Получение информации о пользователе для создания объекта User
+                User user = dbHelper.GetUserByUsername(username);
+                if (user != null)
+                {
+                    MessageBox.Show("Вы успешно вошли в систему!", "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                    // Создание и показ формы профиля с объектом User
+                    UserProfileForm userProfileForm = new UserProfileForm(user);
+                    userProfileForm.Show();
+                    this.Hide(); // Скрываем текущую форму логина
+                }
+                else
+                {
+                    ShowErrorMessage("Не удалось получить информацию о пользователе.");
+                }
             }
             else
             {
                 ShowErrorMessage("Неправильное имя пользователя или пароль.");
             }
         }
+
 
         // Метод для хэширования пароля
         private string HashPassword(string password)
