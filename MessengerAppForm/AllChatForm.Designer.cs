@@ -39,6 +39,7 @@
             txtMessageInput.Name = "txtMessageInput";
             txtMessageInput.Size = new Size(465, 23);
             txtMessageInput.TabIndex = 0;
+
             // 
             // btnSendMessage
             // 
