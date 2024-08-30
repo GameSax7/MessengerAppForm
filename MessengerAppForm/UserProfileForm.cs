@@ -4,25 +4,28 @@ using System;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
+
 namespace MessengerAppForm
 {
     public partial class UserProfileForm : Form
     {
         private User currentUser;
         private string username;
-        private string email;
 
-        public UserProfileForm(string username)
-        {
-            InitializeComponent();
-            this.username = username;
-            LoadUserData();
-        }
+        // Конструктор для открытия собственного профиля
         public UserProfileForm(User user)
         {
             InitializeComponent();
             currentUser = user;
             username = user.Username;
+            LoadUserData();
+        }
+
+        // Конструктор для открытия чужого профиля
+        public UserProfileForm(string username)
+        {
+            InitializeComponent();
+            this.username = username;
             LoadUserData();
         }
 
@@ -58,29 +61,35 @@ namespace MessengerAppForm
                                 {
                                     picProfilePhoto.Image = null; // Установите изображение по умолчанию, если нужно
                                 }
-
-                                // Если это чужой профиль, скрываем кнопки и блокируем поля
-                                if (currentUser == null || !string.Equals(currentUser.Username, username, StringComparison.OrdinalIgnoreCase))
-                                {
-                                    btnSaveInfo.Visible = false;  // Скрываем кнопку сохранения изменений
-                                    btnUploadPhoto.Visible = false; // Скрываем кнопку загрузки фото
-                                    btnLogout.Visible = false; // Скрываем кнопку выхода из профиля
-
-                                    // Делаем текстовые поля и другие элементы управления недоступными для редактирования
-                                    txtAboutMe.ReadOnly = true;
-                                    txtAboutMe.BackColor = SystemColors.Control; // Устанавливаем цвет фона как у заблокированного элемента
-                                }
-                                else
-                                {
-                                    // Показываем кнопки и делаем поля доступными для редактирования
-                                    btnSaveInfo.Visible = true;
-                                    btnUploadPhoto.Visible = true;
-                                    btnLogout.Visible = true;
-
-                                    txtAboutMe.ReadOnly = false;
-                                    txtAboutMe.BackColor = SystemColors.Window; // Восстанавливаем цвет фона
-                                }
                             }
+                            else
+                            {
+                                // Если пользователь не найден, возможно, нужно обработать этот случай
+                                MessageBox.Show("Пользователь не найден.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                return;
+                            }
+                        }
+
+                        // Определение, чей профиль просматривается
+                        if (currentUser != null && string.Equals(currentUser.Username, username, StringComparison.OrdinalIgnoreCase))
+                        {
+                            // Это профиль текущего пользователя
+                            btnSaveInfo.Visible = true;
+                            btnUploadPhoto.Visible = true;
+                            btnLogout.Visible = true;
+
+                            txtAboutMe.ReadOnly = false;
+                            txtAboutMe.BackColor = SystemColors.Window;
+                        }
+                        else
+                        {
+                            // Это чужой профиль
+                            btnSaveInfo.Visible = false;
+                            btnUploadPhoto.Visible = false;
+                            btnLogout.Visible = false;
+
+                            txtAboutMe.ReadOnly = true;
+                            txtAboutMe.BackColor = SystemColors.Control;
                         }
                     }
                 }
@@ -90,8 +99,6 @@ namespace MessengerAppForm
                 }
             }
         }
-
-
 
 
         public void SaveUserProfile(string username, byte[] profilePicture, string aboutMe)
@@ -126,7 +133,7 @@ namespace MessengerAppForm
             using (OpenFileDialog openFileDialog = new OpenFileDialog())
             {
                 openFileDialog.Filter = "Image Files|*.jpg;*.jpeg;*.png;*.bmp";
-                openFileDialog.Title = "Select a Profile Photo";
+                openFileDialog.Title = "Выберите фото профиля";
 
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
@@ -196,20 +203,22 @@ namespace MessengerAppForm
             lblSearchResult.ForeColor = Color.Black;
             lblSearchResult.Text = message;
         }
+
         private void btnViewProfile_Click(object sender, EventArgs e)
         {
-            string foundUsername = btnViewProfile.Tag as string;
+            string foundUsername = btnViewProfile.Tag as string; // Retrieve the username from the Tag property
+
             if (!string.IsNullOrEmpty(foundUsername))
             {
-                // Закрываем текущую форму, чтобы скрыть ваш профиль
-                this.Close();
-
-                // Открываем форму профиля найденного пользователя
+                // Open the UserProfileForm for the found user
                 UserProfileForm userProfileForm = new UserProfileForm(foundUsername);
                 userProfileForm.Show();
+            }
+            else
+            {
+                MessageBox.Show("Не удалось открыть профиль пользователя.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
     }
 }
-
