@@ -11,6 +11,7 @@ namespace MessengerAppForm
         private System.Windows.Forms.Timer timer;
         private string connectionString = "Server=188.225.45.127;Port=3306;Database=MessengerDB;User ID=root;Password=MessengerDB;";
         private string currentUser;
+        private DateTime lastLoadedTimestamp = DateTime.MinValue;
 
         public AllChatForm(string username)
         {
@@ -18,18 +19,22 @@ namespace MessengerAppForm
             InitializeChat();
             currentUser = username;
             txtMessageInput.KeyDown += new KeyEventHandler(txtMessageInput_KeyDown);
+            this.FormClosing += AllChatForm_FormClosing;
         }
+
         private void InitializeChat()
         {
             timer = new System.Windows.Forms.Timer();
-            timer.Interval = 5000; // Интервал в миллисекундах (например, 5000 мс = 5 секунд)
+            timer.Interval = 100; // Интервал в миллисекундах (например, 5000 мс = 5 секунд)
             timer.Tick += new EventHandler(Timer_Tick);
             timer.Start();
         }
+
         private void Timer_Tick(object sender, EventArgs e)
         {
             LoadChatHistory();
         }
+
         private void AllChatForm_Load(object sender, EventArgs e)
         {
             LoadChatHistory();
@@ -37,23 +42,27 @@ namespace MessengerAppForm
 
         private void LoadChatHistory()
         {
-            using (MySqlConnection connection = new MySqlConnection("Server=188.225.45.127;Port=3306;Database=MessengerDB;User ID=root;Password=MessengerDB;"))
+            using (MySqlConnection connection = new MySqlConnection(connectionString))
             {
                 try
                 {
                     connection.Open();
-                    string query = "SELECT Username, Message, Timestamp FROM ChatMessages ORDER BY Timestamp ASC";
+                    string query = "SELECT Username, Message, Timestamp FROM ChatMessages WHERE Timestamp > @lastLoadedTimestamp ORDER BY Timestamp ASC";
                     using (MySqlCommand command = new MySqlCommand(query, connection))
                     {
+                        command.Parameters.AddWithValue("@lastLoadedTimestamp", lastLoadedTimestamp);
                         using (MySqlDataReader reader = command.ExecuteReader())
                         {
-                            txtChatHistory.Clear(); // Очистите текстовое поле перед загрузкой новых данных
                             while (reader.Read())
                             {
                                 string username = reader["Username"].ToString();
                                 string message = reader["Message"].ToString();
                                 DateTime timestamp = Convert.ToDateTime(reader["Timestamp"]);
                                 txtChatHistory.AppendText($"{timestamp} {username}: {message}\r\n");
+                                if (timestamp > lastLoadedTimestamp)
+                                {
+                                    lastLoadedTimestamp = timestamp;
+                                }
                             }
                         }
                     }
@@ -65,7 +74,6 @@ namespace MessengerAppForm
             }
         }
 
-
         private void btnSendMessage_Click(object sender, EventArgs e)
         {
             string message = txtMessageInput.Text.Trim();
@@ -76,12 +84,13 @@ namespace MessengerAppForm
                 txtMessageInput.Clear();
             }
         }
+
         private void txtMessageInput_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.Enter && !e.Shift) // Проверяем, что нажата клавиша Enter без удерживания Shift
+            if (e.KeyCode == Keys.Enter && !e.Shift)
             {
-                e.SuppressKeyPress = true; // Предотвращаем добавление новой строки в TextBox
-                btnSendMessage_Click(sender, e); // Вызываем метод отправки сообщения
+                e.SuppressKeyPress = true;
+                btnSendMessage_Click(sender, e);
             }
         }
 
@@ -99,7 +108,18 @@ namespace MessengerAppForm
                 }
             }
         }
+
+        private void AllChatForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (timer != null)
+            {
+                timer.Stop();
+                timer.Tick -= Timer_Tick;
+                timer.Dispose();
+            }
+        }
     }
+
 
 
 }

@@ -14,7 +14,16 @@ namespace MessengerAppForm
         public MainForm()
         {
             InitializeComponent();
+            this.FormClosing += MainForm_FormClosing;
         }
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+
+
+            // Завершаем приложение
+            Application.Exit();
+        }
+
 
         public void SetCurrentUser(User user)
         {
