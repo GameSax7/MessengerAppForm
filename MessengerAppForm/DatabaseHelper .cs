@@ -1,6 +1,7 @@
 ﻿using MySql.Data.MySqlClient;
 using System;
 using System.Windows.Forms;
+using MessengerAppForm;
 
 public class DatabaseHelper
 {
@@ -11,7 +12,30 @@ public class DatabaseHelper
     {
         _connectionString = connectionString;
     }
-
+    public User FindUserByUsername(string username)
+    {
+        using (MySqlConnection connection = new MySqlConnection(_connectionString))
+        {
+            connection.Open();
+            string query = "SELECT Username, Email FROM Users WHERE Username = @Username";
+            using (MySqlCommand command = new MySqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@Username", username);
+                using (MySqlDataReader reader = command.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        // Здесь мы используем конструктор с двумя параметрами
+                        return new User(reader["Username"].ToString(), reader["Email"].ToString());
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
+            }
+        }
+    }
     // Метод для регистрации пользователя
     public void RegisterUser(string username, string passwordHash, string email)
     {
@@ -143,6 +167,8 @@ public class DatabaseHelper
                 command.Parameters.AddWithValue("@Message", message);
                 command.ExecuteNonQuery();
             }
+
         }
+
     }
 }

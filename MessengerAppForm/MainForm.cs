@@ -5,7 +5,7 @@ using System.Windows.Forms;
 
 namespace MessengerAppForm
 {
-    
+
     public partial class MainForm : Form
 
     {
@@ -42,7 +42,7 @@ namespace MessengerAppForm
 
             // ’эшируем введенный пользователем пароль
             string passwordHash = HashPassword(password);
-            string connectionString = "Server=188.225.45.127;Port=3306;Database=MessengerDB;User ID=root;Password=root;";
+            string connectionString = "Server=188.225.45.127;Port=3306;Database=MessengerDB;User ID=root;Password=MessengerDB;";
 
             // —оздаем экземпл€р DatabaseHelper и провер€ем, существует ли пользователь
             DatabaseHelper dbHelper = new DatabaseHelper(connectionString);
@@ -108,7 +108,10 @@ namespace MessengerAppForm
             loginForm.Show();
             this.Close();
         }
+        private void btnSearch_Click(object sender, EventArgs e)
+        {
+
+        }
 
     }
-
 }
