@@ -39,6 +39,10 @@
             label3 = new Label();
             label4 = new Label();
             btnGoToChat = new Button();
+            btnSearch = new Button();
+            txtSearch = new TextBox();
+            lblSearchResult = new Label();
+            btnViewProfile = new Button();
             ((System.ComponentModel.ISupportInitialize)picProfilePhoto).BeginInit();
             SuspendLayout();
             // 
@@ -153,6 +157,42 @@
             btnGoToChat.UseVisualStyleBackColor = true;
             btnGoToChat.Click += btnGoToChat_Click;
             // 
+            // btnSearch
+            // 
+            btnSearch.Location = new Point(645, 45);
+            btnSearch.Name = "btnSearch";
+            btnSearch.Size = new Size(75, 23);
+            btnSearch.TabIndex = 13;
+            btnSearch.Text = "button1";
+            btnSearch.UseVisualStyleBackColor = true;
+            btnSearch.Click += btnSearch_Click;
+            // 
+            // txtSearch
+            // 
+            txtSearch.Location = new Point(627, 9);
+            txtSearch.Name = "txtSearch";
+            txtSearch.Size = new Size(100, 23);
+            txtSearch.TabIndex = 14;
+            // 
+            // lblSearchResult
+            // 
+            lblSearchResult.AutoSize = true;
+            lblSearchResult.Location = new Point(614, 77);
+            lblSearchResult.Name = "lblSearchResult";
+            lblSearchResult.Size = new Size(38, 15);
+            lblSearchResult.TabIndex = 15;
+            lblSearchResult.Text = "label1";
+            // 
+            // btnViewProfile
+            // 
+            btnViewProfile.Location = new Point(530, 40);
+            btnViewProfile.Name = "btnViewProfile";
+            btnViewProfile.Size = new Size(75, 23);
+            btnViewProfile.TabIndex = 16;
+            btnViewProfile.Text = "button1";
+            btnViewProfile.UseVisualStyleBackColor = true;
+            this.btnViewProfile.Click += new System.EventHandler(this.btnViewProfile_Click);
+            // 
             // UserProfileForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -160,6 +200,10 @@
             BackgroundImage = Properties.Resources._171848470090491;
             BackgroundImageLayout = ImageLayout.Stretch;
             ClientSize = new Size(800, 450);
+            Controls.Add(btnViewProfile);
+            Controls.Add(lblSearchResult);
+            Controls.Add(txtSearch);
+            Controls.Add(btnSearch);
             Controls.Add(btnGoToChat);
             Controls.Add(label4);
             Controls.Add(label3);
@@ -191,5 +235,9 @@
         private Label label3;
         private Label label4;
         private Button btnGoToChat;
+        private Button btnSearch;
+        private TextBox txtSearch;
+        private Label lblSearchResult;
+        private Button btnViewProfile;
     }
 }

@@ -1,23 +1,26 @@
-﻿using Microsoft.VisualBasic.ApplicationServices;
-using MySql.Data.MySqlClient;
+﻿using MySql.Data.MySqlClient;
 using System;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
+
 namespace MessengerAppForm
 {
     public partial class UserProfileForm : Form
     {
         private User currentUser;
         private string username;
-        private string email;
 
+        // Конструктор для открытия собственного профиля
         public UserProfileForm(User user)
         {
             InitializeComponent();
             currentUser = user;
+            username = user.Username;
+            LoadUserData();
         }
 
+        // Конструктор для открытия чужого профиля
         public UserProfileForm(string username)
         {
             InitializeComponent();
@@ -58,6 +61,34 @@ namespace MessengerAppForm
                                     picProfilePhoto.Image = null; // Установите изображение по умолчанию, если нужно
                                 }
                             }
+                            else
+                            {
+                                // Если пользователь не найден, возможно, нужно обработать этот случай
+                                MessageBox.Show("Пользователь не найден.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                return;
+                            }
+                        }
+
+                        // Определение, чей профиль просматривается
+                        if (currentUser != null && string.Equals(currentUser.Username, username, StringComparison.OrdinalIgnoreCase))
+                        {
+                            // Это профиль текущего пользователя
+                            btnSaveInfo.Visible = true;
+                            btnUploadPhoto.Visible = true;
+                            btnLogout.Visible = true;
+
+                            txtAboutMe.ReadOnly = false;
+                            txtAboutMe.BackColor = SystemColors.Window;
+                        }
+                        else
+                        {
+                            // Это чужой профиль
+                            btnSaveInfo.Visible = false;
+                            btnUploadPhoto.Visible = false;
+                            btnLogout.Visible = false;
+
+                            txtAboutMe.ReadOnly = true;
+                            txtAboutMe.BackColor = SystemColors.Control;
                         }
                     }
                 }
@@ -68,7 +99,7 @@ namespace MessengerAppForm
             }
         }
 
-        public void SaveUserProfile(string username, byte[] profilePicture, string aboutMe)
+        private void SaveUserProfile(string username, byte[] profilePicture, string aboutMe)
         {
             using (MySqlConnection connection = new MySqlConnection("Server=188.225.45.127;Port=3306;Database=MessengerDB;User ID=root;Password=MessengerDB;"))
             {
@@ -100,7 +131,7 @@ namespace MessengerAppForm
             using (OpenFileDialog openFileDialog = new OpenFileDialog())
             {
                 openFileDialog.Filter = "Image Files|*.jpg;*.jpeg;*.png;*.bmp";
-                openFileDialog.Title = "Select a Profile Photo";
+                openFileDialog.Title = "Выберите фото профиля";
 
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
@@ -139,6 +170,58 @@ namespace MessengerAppForm
         {
             AllChatForm allChatForm = new AllChatForm(username); // Передаем имя пользователя
             allChatForm.Show();
+        }
+
+        private void btnSearch_Click(object sender, EventArgs e)
+        {
+            string searchUsername = txtSearch.Text.Trim();
+
+            if (string.IsNullOrEmpty(searchUsername))
+            {
+                ShowSearchResult("Введите имя пользователя для поиска.");
+                return;
+            }
+
+            string connectionString = "Server=188.225.45.127;Port=3306;Database=MessengerDB;User ID=root;Password=MessengerDB;";
+            DatabaseHelper dbHelper = new DatabaseHelper(connectionString);
+
+            User foundUser = dbHelper.FindUserByUsername(searchUsername);
+
+            if (foundUser != null)
+            {
+                ShowSearchResult($"Пользователь найден: {foundUser.Username}, Email: {foundUser.Email}");
+                btnViewProfile.Tag = foundUser.Username; // Сохраняем имя пользователя в свойство Tag кнопки
+                btnViewProfile.Visible = true; // Показываем кнопку для перехода в профиль
+            }
+            else
+            {
+                ShowSearchResult("Пользователь не найден.");
+                btnViewProfile.Visible = false; // Скрываем кнопку, если пользователь не найден
+            }
+        }
+
+        // Метод для отображения результата поиска
+        private void ShowSearchResult(string message)
+        {
+            lblSearchResult.Visible = true;
+            lblSearchResult.ForeColor = Color.Black;
+            lblSearchResult.Text = message;
+        }
+
+        private void btnViewProfile_Click(object sender, EventArgs e)
+        {
+            string foundUsername = btnViewProfile.Tag as string; // Retrieve the username from the Tag property
+
+            if (!string.IsNullOrEmpty(foundUsername))
+            {
+                // Open the UserProfileForm for the found user
+                UserProfileForm userProfileForm = new UserProfileForm(foundUsername);
+                userProfileForm.Show();
+            }
+            else
+            {
+                MessageBox.Show("Не удалось открыть профиль пользователя.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
     }
 }

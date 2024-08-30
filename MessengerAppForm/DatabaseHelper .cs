@@ -1,6 +1,7 @@
 ﻿using MySql.Data.MySqlClient;
 using System;
 using System.Windows.Forms;
+using MessengerAppForm;
 
 public class DatabaseHelper
 {
@@ -11,7 +12,33 @@ public class DatabaseHelper
     {
         _connectionString = connectionString;
     }
-
+    public User FindUserByUsername(string username)
+    {
+        using (MySqlConnection connection = new MySqlConnection(_connectionString))
+        {
+            connection.Open();
+            string query = "SELECT Username, Email FROM Users WHERE Username = @Username";
+            using (MySqlCommand command = new MySqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@Username", username);
+                using (MySqlDataReader reader = command.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        return new User
+                        {
+                            Username = reader["Username"].ToString(),
+                            Email = reader["Email"].ToString()
+                        };
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
+            }
+        }
+    }
     // Метод для регистрации пользователя
     public void RegisterUser(string username, string passwordHash, string email)
     {
@@ -37,6 +64,7 @@ public class DatabaseHelper
 
                 command.ExecuteNonQuery();
             }
+
         }
     }
 
@@ -54,6 +82,32 @@ public class DatabaseHelper
 
                 int count = Convert.ToInt32(command.ExecuteScalar());
                 return count > 0;
+            }
+        }
+    }
+    public User GetUserByUsername(string username)
+    {
+        using (MySqlConnection connection = new MySqlConnection(_connectionString))
+        {
+            connection.Open();
+            string query = "SELECT Username, Email, ProfilePicture, AboutMe FROM Users WHERE Username = @Username";
+            using (MySqlCommand command = new MySqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@Username", username);
+                using (MySqlDataReader reader = command.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        return new User
+                        {
+                            Username = reader["Username"].ToString(),
+                            Email = reader["Email"].ToString(),
+                            AboutMe = reader["AboutMe"].ToString(),
+                            ProfilePicture = reader["ProfilePicture"] as byte[]
+                        };
+                    }
+                    return null;
+                }
             }
         }
     }
@@ -143,6 +197,9 @@ public class DatabaseHelper
                 command.Parameters.AddWithValue("@Message", message);
                 command.ExecuteNonQuery();
             }
+
         }
+
+
     }
 }
