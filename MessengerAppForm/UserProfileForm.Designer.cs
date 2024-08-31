@@ -43,6 +43,7 @@
             txtSearch = new TextBox();
             lblSearchResult = new Label();
             btnViewProfile = new Button();
+            lblOnlineStatus = new Label();
             ((System.ComponentModel.ISupportInitialize)picProfilePhoto).BeginInit();
             SuspendLayout();
             // 
@@ -51,7 +52,7 @@
             lblUsername.AutoSize = true;
             lblUsername.BackColor = Color.Transparent;
             lblUsername.Font = new Font("Segoe UI", 20F);
-            lblUsername.Location = new Point(40, 77);
+            lblUsername.Location = new Point(1, 45);
             lblUsername.Name = "lblUsername";
             lblUsername.Size = new Size(246, 37);
             lblUsername.TabIndex = 0;
@@ -62,11 +63,12 @@
             lblEmail.AutoSize = true;
             lblEmail.BackColor = Color.Transparent;
             lblEmail.Font = new Font("Segoe UI", 15F);
-            lblEmail.Location = new Point(634, 350);
+            lblEmail.Location = new Point(619, 363);
             lblEmail.Name = "lblEmail";
             lblEmail.Size = new Size(65, 28);
             lblEmail.TabIndex = 1;
             lblEmail.Text = "label2";
+            lblEmail.Click += lblEmail_Click;
             // 
             // btnLogout
             // 
@@ -81,7 +83,7 @@
             // picProfilePhoto
             // 
             picProfilePhoto.BackgroundImageLayout = ImageLayout.Stretch;
-            picProfilePhoto.Location = new Point(40, 124);
+            picProfilePhoto.Location = new Point(1, 85);
             picProfilePhoto.Name = "picProfilePhoto";
             picProfilePhoto.Size = new Size(278, 220);
             picProfilePhoto.TabIndex = 3;
@@ -92,12 +94,12 @@
             txtAboutMe.Location = new Point(322, 124);
             txtAboutMe.Multiline = true;
             txtAboutMe.Name = "txtAboutMe";
-            txtAboutMe.Size = new Size(466, 220);
+            txtAboutMe.Size = new Size(450, 134);
             txtAboutMe.TabIndex = 4;
             // 
             // btnUploadPhoto
             // 
-            btnUploadPhoto.Location = new Point(40, 350);
+            btnUploadPhoto.Location = new Point(40, 311);
             btnUploadPhoto.Name = "btnUploadPhoto";
             btnUploadPhoto.Size = new Size(161, 23);
             btnUploadPhoto.TabIndex = 5;
@@ -107,7 +109,7 @@
             // 
             // btnSaveInfo
             // 
-            btnSaveInfo.Location = new Point(40, 401);
+            btnSaveInfo.Location = new Point(40, 340);
             btnSaveInfo.Name = "btnSaveInfo";
             btnSaveInfo.Size = new Size(161, 23);
             btnSaveInfo.TabIndex = 6;
@@ -120,7 +122,7 @@
             label2.AutoSize = true;
             label2.BackColor = Color.Transparent;
             label2.Font = new Font("Segoe UI", 20F);
-            label2.Location = new Point(322, 77);
+            label2.Location = new Point(480, 77);
             label2.Name = "label2";
             label2.Size = new Size(125, 37);
             label2.TabIndex = 8;
@@ -131,7 +133,7 @@
             label3.AutoSize = true;
             label3.BackColor = Color.Transparent;
             label3.Font = new Font("Segoe UI", 32F);
-            label3.Location = new Point(40, 9);
+            label3.Location = new Point(40, -6);
             label3.Name = "label3";
             label3.Size = new Size(400, 59);
             label3.TabIndex = 9;
@@ -141,11 +143,13 @@
             // 
             label4.AutoSize = true;
             label4.BackColor = Color.Transparent;
-            label4.Location = new Point(564, 358);
+            label4.Font = new Font("Segoe UI", 12F, FontStyle.Bold, GraphicsUnit.Point, 204);
+            label4.Location = new Point(521, 370);
             label4.Name = "label4";
-            label4.Size = new Size(64, 15);
+            label4.Size = new Size(92, 21);
             label4.TabIndex = 10;
             label4.Text = "Мой email";
+            label4.Click += label4_Click;
             // 
             // btnGoToChat
             // 
@@ -159,17 +163,17 @@
             // 
             // btnSearch
             // 
-            btnSearch.Location = new Point(645, 45);
+            btnSearch.Location = new Point(687, 32);
             btnSearch.Name = "btnSearch";
             btnSearch.Size = new Size(75, 23);
             btnSearch.TabIndex = 13;
-            btnSearch.Text = "button1";
+            btnSearch.Text = "Найти";
             btnSearch.UseVisualStyleBackColor = true;
             btnSearch.Click += btnSearch_Click;
             // 
             // txtSearch
             // 
-            txtSearch.Location = new Point(627, 9);
+            txtSearch.Location = new Point(672, 3);
             txtSearch.Name = "txtSearch";
             txtSearch.Size = new Size(100, 23);
             txtSearch.TabIndex = 14;
@@ -177,21 +181,31 @@
             // lblSearchResult
             // 
             lblSearchResult.AutoSize = true;
-            lblSearchResult.Location = new Point(614, 77);
+            lblSearchResult.Location = new Point(513, 6);
             lblSearchResult.Name = "lblSearchResult";
             lblSearchResult.Size = new Size(38, 15);
             lblSearchResult.TabIndex = 15;
             lblSearchResult.Text = "label1";
+            lblSearchResult.Visible = false;
             // 
             // btnViewProfile
             // 
-            btnViewProfile.Location = new Point(530, 40);
+            btnViewProfile.Location = new Point(540, 30);
             btnViewProfile.Name = "btnViewProfile";
-            btnViewProfile.Size = new Size(75, 23);
+            btnViewProfile.Size = new Size(141, 23);
             btnViewProfile.TabIndex = 16;
-            btnViewProfile.Text = "button1";
+            btnViewProfile.Text = "Перейти к профилю";
             btnViewProfile.UseVisualStyleBackColor = true;
-            this.btnViewProfile.Click += new System.EventHandler(this.btnViewProfile_Click);
+            btnViewProfile.Click += btnViewProfile_Click;
+            // 
+            // lblOnlineStatus
+            // 
+            lblOnlineStatus.AutoSize = true;
+            lblOnlineStatus.Location = new Point(253, 61);
+            lblOnlineStatus.Name = "lblOnlineStatus";
+            lblOnlineStatus.Size = new Size(87, 15);
+            lblOnlineStatus.TabIndex = 17;
+            lblOnlineStatus.Text = "lblOnlineStatus";
             // 
             // UserProfileForm
             // 
@@ -200,6 +214,7 @@
             BackgroundImage = Properties.Resources._171848470090491;
             BackgroundImageLayout = ImageLayout.Stretch;
             ClientSize = new Size(800, 450);
+            Controls.Add(lblOnlineStatus);
             Controls.Add(btnViewProfile);
             Controls.Add(lblSearchResult);
             Controls.Add(txtSearch);
@@ -239,5 +254,6 @@
         private TextBox txtSearch;
         private Label lblSearchResult;
         private Button btnViewProfile;
+        private Label lblOnlineStatus;
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Text;
 using System.Windows.Forms;
 using MySql.Data.MySqlClient;
 
@@ -19,7 +20,6 @@ namespace MessengerAppForm
             InitializeChat();
             currentUser = username;
             txtMessageInput.KeyDown += new KeyEventHandler(txtMessageInput_KeyDown);
-            this.FormClosing += AllChatForm_FormClosing;
         }
 
         private void InitializeChat()
@@ -37,8 +37,10 @@ namespace MessengerAppForm
 
         private void AllChatForm_Load(object sender, EventArgs e)
         {
-            LoadChatHistory();
+            LoadChatHistory(); // Загрузка истории чата при открытии формы
         }
+
+        private bool isUserScrolling = false; // Флаг для отслеживания, когда пользователь прокручивает вручную
 
         private void LoadChatHistory()
         {
@@ -47,7 +49,22 @@ namespace MessengerAppForm
                 try
                 {
                     connection.Open();
-                    string query = "SELECT Username, Message, Timestamp FROM ChatMessages WHERE Timestamp > @lastLoadedTimestamp ORDER BY Timestamp ASC";
+                    string query = @"
+                SELECT 
+                    ChatMessages.Username AS ChatUsername, 
+                    Message, 
+                    Timestamp, 
+                    Users.IsOnline 
+                FROM 
+                    ChatMessages 
+                JOIN 
+                    Users 
+                ON 
+                    ChatMessages.Username = Users.Username 
+                WHERE 
+                    Timestamp > @lastLoadedTimestamp 
+                ORDER BY 
+                    Timestamp ASC";
                     using (MySqlCommand command = new MySqlCommand(query, connection))
                     {
                         command.Parameters.AddWithValue("@lastLoadedTimestamp", lastLoadedTimestamp);
@@ -55,10 +72,28 @@ namespace MessengerAppForm
                         {
                             while (reader.Read())
                             {
-                                string username = reader["Username"].ToString();
+                                string username = reader["ChatUsername"].ToString();
                                 string message = reader["Message"].ToString();
                                 DateTime timestamp = Convert.ToDateTime(reader["Timestamp"]);
-                                txtChatHistory.AppendText($"{timestamp} {username}: {message}\r\n");
+
+                                bool isOnline = Convert.ToBoolean(reader["IsOnline"]);
+
+                                // Вставляем временную метку
+                                txtChatHistory.SelectionColor = Color.Black;
+                                txtChatHistory.AppendText($"{timestamp} ");
+
+                                // Вставляем имя пользователя
+                                txtChatHistory.SelectionColor = Color.Blue;
+                                txtChatHistory.AppendText(username);
+
+                                // Вставляем статус (Online/Offline) с соответствующим цветом
+                                txtChatHistory.SelectionColor = isOnline ? Color.Green : Color.Red;
+                                txtChatHistory.AppendText(isOnline ? " (Online)" : " (Offline)");
+
+                                // Вставляем сообщение
+                                txtChatHistory.SelectionColor = Color.Black;
+                                txtChatHistory.AppendText($": {message}\r\n");
+
                                 if (timestamp > lastLoadedTimestamp)
                                 {
                                     lastLoadedTimestamp = timestamp;
@@ -80,8 +115,8 @@ namespace MessengerAppForm
             if (!string.IsNullOrEmpty(message))
             {
                 SaveMessage(currentUser, message);
-                LoadChatHistory(); // Refresh chat after sending a new message
-                txtMessageInput.Clear();
+                txtMessageInput.Clear(); // Очищаем поле ввода сообщения
+                LoadChatHistory(); // Обновляем историю чата после отправки сообщения
             }
         }
 
@@ -106,20 +141,10 @@ namespace MessengerAppForm
                     cmd.Parameters.AddWithValue("@message", message);
                     cmd.ExecuteNonQuery();
                 }
+
             }
+
         }
 
-        private void AllChatForm_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            if (timer != null)
-            {
-                timer.Stop();
-                timer.Tick -= Timer_Tick;
-                timer.Dispose();
-            }
-        }
     }
-
-
-
 }

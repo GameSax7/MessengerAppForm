@@ -81,9 +81,35 @@ public class DatabaseHelper
                 command.Parameters.AddWithValue("@PasswordHash", passwordHash);
 
                 int count = Convert.ToInt32(command.ExecuteScalar());
-                return count > 0;
+                if (count > 0)
+                {
+                    // Пользователь авторизован, устанавливаем статус онлайн
+                    SetUserOnlineStatus(username, true);
+                    return true;
+                }
+                return false;
             }
         }
+    }
+
+    public void SetUserOnlineStatus(string username, bool isOnline)
+    {
+        using (MySqlConnection connection = new MySqlConnection(_connectionString))
+        {
+            connection.Open();
+            string query = "UPDATE Users SET IsOnline = @IsOnline WHERE Username = @Username";
+            using (MySqlCommand command = new MySqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@Username", username);
+                command.Parameters.AddWithValue("@IsOnline", isOnline ? 1 : 0);
+                command.ExecuteNonQuery();
+            }
+        }
+    }
+
+    public void LogoutUser(string username)
+    {
+        SetUserOnlineStatus(username, false);
     }
     public User GetUserByUsername(string username)
     {

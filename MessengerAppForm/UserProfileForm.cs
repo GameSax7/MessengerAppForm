@@ -35,7 +35,7 @@ namespace MessengerAppForm
                 try
                 {
                     connection.Open();
-                    string query = "SELECT Email, ProfilePicture, AboutMe FROM Users WHERE Username = @Username";
+                    string query = "SELECT Email, ProfilePicture, AboutMe, IsOnline FROM Users WHERE Username = @Username";
                     using (MySqlCommand command = new MySqlCommand(query, connection))
                     {
                         command.Parameters.AddWithValue("@Username", username);
@@ -46,6 +46,11 @@ namespace MessengerAppForm
                                 lblUsername.Text = username;
                                 lblEmail.Text = reader["Email"].ToString();
                                 txtAboutMe.Text = reader["AboutMe"].ToString();
+
+                                // Отображение статуса онлайн рядом с именем пользователя
+                                bool isOnline = Convert.ToBoolean(reader["IsOnline"]);
+                                lblUsername.Text += isOnline ? " (Online)" : " (Offline)";
+                                lblUsername.ForeColor = isOnline ? Color.Green : Color.Red;
 
                                 // Загрузка изображения профиля
                                 if (reader["ProfilePicture"] != DBNull.Value)
@@ -58,12 +63,11 @@ namespace MessengerAppForm
                                 }
                                 else
                                 {
-                                    picProfilePhoto.Image = null; // Установите изображение по умолчанию, если нужно
+                                    picProfilePhoto.Image = null;
                                 }
                             }
                             else
                             {
-                                // Если пользователь не найден, возможно, нужно обработать этот случай
                                 MessageBox.Show("Пользователь не найден.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                                 return;
                             }
@@ -72,21 +76,23 @@ namespace MessengerAppForm
                         // Определение, чей профиль просматривается
                         if (currentUser != null && string.Equals(currentUser.Username, username, StringComparison.OrdinalIgnoreCase))
                         {
-                            // Это профиль текущего пользователя
                             btnSaveInfo.Visible = true;
                             btnUploadPhoto.Visible = true;
                             btnLogout.Visible = true;
-
                             txtAboutMe.ReadOnly = false;
                             txtAboutMe.BackColor = SystemColors.Window;
                         }
                         else
                         {
-                            // Это чужой профиль
+                            btnGoToChat.Visible = false;
+                            lblEmail.Visible = false;
+                            label4.Visible = false;
+                            btnViewProfile.Visible = false;
+                            txtSearch.Visible = false;
+                            btnSearch.Visible = false;
                             btnSaveInfo.Visible = false;
                             btnUploadPhoto.Visible = false;
                             btnLogout.Visible = false;
-
                             txtAboutMe.ReadOnly = true;
                             txtAboutMe.BackColor = SystemColors.Control;
                         }
@@ -189,7 +195,7 @@ namespace MessengerAppForm
 
             if (foundUser != null)
             {
-                ShowSearchResult($"Пользователь найден: {foundUser.Username}, Email: {foundUser.Email}");
+                ShowSearchResult($"Пользователь найден: {foundUser.Username}");
                 btnViewProfile.Tag = foundUser.Username; // Сохраняем имя пользователя в свойство Tag кнопки
                 btnViewProfile.Visible = true; // Показываем кнопку для перехода в профиль
             }
@@ -223,5 +229,28 @@ namespace MessengerAppForm
                 MessageBox.Show("Не удалось открыть профиль пользователя.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
+        private void label4_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void lblEmail_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        
     }
 }
+/*btnGoToChat.Visible = false;
+                            lblEmail.Visible = false;
+                            label4.Visible = false;
+                            btnViewProfile.Visible = false;
+                            txtSearch.Visible = false;
+                            btnSearch.Visible = false;
+                            btnSaveInfo.Visible = false;
+                            btnUploadPhoto.Visible = false;
+                            btnLogout.Visible = false;
+                            txtAboutMe.ReadOnly = true;
+                            txtAboutMe.BackColor = SystemColors.Control;*/

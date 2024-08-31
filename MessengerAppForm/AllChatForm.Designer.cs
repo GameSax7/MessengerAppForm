@@ -30,7 +30,7 @@
         {
             txtMessageInput = new TextBox();
             btnSendMessage = new Button();
-            txtChatHistory = new TextBox();
+            txtChatHistory = new RichTextBox();
             SuspendLayout();
             // 
             // txtMessageInput
@@ -52,14 +52,11 @@
             // 
             // txtChatHistory
             // 
-            txtChatHistory.BackColor = SystemColors.Control;
-            txtChatHistory.Location = new Point(37, 37);
-            txtChatHistory.Multiline = true;
+            txtChatHistory.Location = new Point(37, 12);
             txtChatHistory.Name = "txtChatHistory";
-            txtChatHistory.ReadOnly = true;
-            txtChatHistory.ScrollBars = ScrollBars.Vertical;
-            txtChatHistory.Size = new Size(736, 351);
+            txtChatHistory.Size = new Size(736, 387);
             txtChatHistory.TabIndex = 2;
+            txtChatHistory.Text = "";
             // 
             // AllChatForm
             // 
@@ -81,6 +78,6 @@
 
         private TextBox txtMessageInput;
         private Button btnSendMessage;
-        private TextBox txtChatHistory;
+        private RichTextBox txtChatHistory;
     }
 }
