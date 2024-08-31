@@ -17,9 +17,9 @@ namespace MessengerAppForm
         public AllChatForm(string username)
         {
             InitializeComponent();
-            InitializeChat();
             currentUser = username;
-            txtMessageInput.KeyDown += new KeyEventHandler(txtMessageInput_KeyDown);
+            this.FormClosing += AllChatForm_FormClosing;
+            this.Load += AllChatForm_Load;
         }
 
         private void InitializeChat()
@@ -37,7 +37,14 @@ namespace MessengerAppForm
 
         private void AllChatForm_Load(object sender, EventArgs e)
         {
-            LoadChatHistory(); // Загрузка истории чата при открытии формы
+            // Обновляем статус онлайн при входе в приложение
+            UpdateOnlineStatus(currentUser, true);
+            LoadChatHistory(); // Загружаем историю чата при открытии формы
+        }
+        private void AllChatForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            // Обновляем статус оффлайн при закрытии формы
+            UpdateOnlineStatus(currentUser, false);
         }
 
         private bool isUserScrolling = false; // Флаг для отслеживания, когда пользователь прокручивает вручную
@@ -144,6 +151,27 @@ namespace MessengerAppForm
 
             }
 
+        }
+        public void UpdateOnlineStatus(string username, bool isOnline)
+        {
+            using (MySqlConnection connection = new MySqlConnection(connectionString))
+            {
+                try
+                {
+                    connection.Open();
+                    string query = "UPDATE Users SET IsOnline = @IsOnline WHERE Username = @Username";
+                    using (MySqlCommand command = new MySqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@Username", username);
+                        command.Parameters.AddWithValue("@IsOnline", isOnline ? 1 : 0);
+                        command.ExecuteNonQuery();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Ошибка обновления статуса: {ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
         }
 
     }
