@@ -1,47 +1,30 @@
 ﻿using System;
-using System.Data;
-using System.Text;
+using System.Drawing;
 using System.Windows.Forms;
 using MySql.Data.MySqlClient;
-
 
 namespace MessengerAppForm
 {
     public partial class AllChatForm : Form
     {
-        private System.Windows.Forms.Timer timer;
+        private System.Windows.Forms.Timer statusTimer;
         private string connectionString = "Server=188.225.45.127;Port=3306;Database=MessengerDB;User ID=root;Password=MessengerDB;";
         private string currentUser;
-        private DateTime lastLoadedTimestamp = DateTime.MinValue;
 
         public AllChatForm(string username)
         {
             InitializeComponent();
-            InitializeChat();
             currentUser = username;
-            txtMessageInput.KeyDown += new KeyEventHandler(txtMessageInput_KeyDown);
+
+            // Инициализация таймера для обновления статусов
+            statusTimer = new System.Windows.Forms.Timer();
+            statusTimer.Interval = 10000; // Интервал в миллисекундах (например, 10000 мс = 10 секунд)
+            statusTimer.Tick += StatusTimer_Tick;
+            statusTimer.Start();
+
+            this.FormClosing += AllChatForm_FormClosing;
+            this.Load += AllChatForm_Load;
         }
-
-        private void InitializeChat()
-        {
-            timer = new System.Windows.Forms.Timer();
-            timer.Interval = 100; // Интервал в миллисекундах (например, 5000 мс = 5 секунд)
-            timer.Tick += new EventHandler(Timer_Tick);
-            timer.Start();
-        }
-
-        private void Timer_Tick(object sender, EventArgs e)
-        {
-            LoadChatHistory();
-        }
-
-        private void AllChatForm_Load(object sender, EventArgs e)
-        {
-            LoadChatHistory(); // Загрузка истории чата при открытии формы
-        }
-
-        private bool isUserScrolling = false; // Флаг для отслеживания, когда пользователь прокручивает вручную
-
         private void LoadChatHistory()
         {
             using (MySqlConnection connection = new MySqlConnection(connectionString))
@@ -49,55 +32,18 @@ namespace MessengerAppForm
                 try
                 {
                     connection.Open();
-                    string query = @"
-                SELECT 
-                    ChatMessages.Username AS ChatUsername, 
-                    Message, 
-                    Timestamp, 
-                    Users.IsOnline 
-                FROM 
-                    ChatMessages 
-                JOIN 
-                    Users 
-                ON 
-                    ChatMessages.Username = Users.Username 
-                WHERE 
-                    Timestamp > @lastLoadedTimestamp 
-                ORDER BY 
-                    Timestamp ASC";
+                    string query = "SELECT Username, Message, Timestamp FROM ChatMessages ORDER BY Timestamp ASC";
                     using (MySqlCommand command = new MySqlCommand(query, connection))
                     {
-                        command.Parameters.AddWithValue("@lastLoadedTimestamp", lastLoadedTimestamp);
                         using (MySqlDataReader reader = command.ExecuteReader())
                         {
+                            txtChatHistory.Clear(); // Очистите текущий текст в RichTextBox
                             while (reader.Read())
                             {
-                                string username = reader["ChatUsername"].ToString();
+                                string username = reader["Username"].ToString();
                                 string message = reader["Message"].ToString();
                                 DateTime timestamp = Convert.ToDateTime(reader["Timestamp"]);
-
-                                bool isOnline = Convert.ToBoolean(reader["IsOnline"]);
-
-                                // Вставляем временную метку
-                                txtChatHistory.SelectionColor = Color.Black;
-                                txtChatHistory.AppendText($"{timestamp} ");
-
-                                // Вставляем имя пользователя
-                                txtChatHistory.SelectionColor = Color.Blue;
-                                txtChatHistory.AppendText(username);
-
-                                // Вставляем статус (Online/Offline) с соответствующим цветом
-                                txtChatHistory.SelectionColor = isOnline ? Color.Green : Color.Red;
-                                txtChatHistory.AppendText(isOnline ? " (Online)" : " (Offline)");
-
-                                // Вставляем сообщение
-                                txtChatHistory.SelectionColor = Color.Black;
-                                txtChatHistory.AppendText($": {message}\r\n");
-
-                                if (timestamp > lastLoadedTimestamp)
-                                {
-                                    lastLoadedTimestamp = timestamp;
-                                }
+                                txtChatHistory.AppendText($"{timestamp} {username}: {message}\r\n");
                             }
                         }
                     }
@@ -108,43 +54,96 @@ namespace MessengerAppForm
                 }
             }
         }
-
-        private void btnSendMessage_Click(object sender, EventArgs e)
+        private void AllChatForm_Load(object sender, EventArgs e)
         {
-            string message = txtMessageInput.Text.Trim();
-            if (!string.IsNullOrEmpty(message))
-            {
-                SaveMessage(currentUser, message);
-                txtMessageInput.Clear(); // Очищаем поле ввода сообщения
-                LoadChatHistory(); // Обновляем историю чата после отправки сообщения
-            }
+            // Обновляем статус онлайн при входе в приложение
+            UpdateOnlineStatus(currentUser, true);
+            LoadChatHistory(); // Загружаем историю чата при открытии формы
         }
 
-        private void txtMessageInput_KeyDown(object sender, KeyEventArgs e)
+        private void AllChatForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (e.KeyCode == Keys.Enter && !e.Shift)
+            // Останавливаем таймер и обновляем статус оффлайн
+            if (statusTimer != null)
             {
-                e.SuppressKeyPress = true;
-                btnSendMessage_Click(sender, e);
+                statusTimer.Stop();
+                statusTimer.Tick -= StatusTimer_Tick;
+                statusTimer.Dispose();
             }
+            UpdateOnlineStatus(currentUser, false);
         }
 
-        private void SaveMessage(string username, string message)
+        private void StatusTimer_Tick(object sender, EventArgs e)
+        {
+            UpdateUserStatuses();
+        }
+
+        private void UpdateUserStatuses()
         {
             using (MySqlConnection connection = new MySqlConnection(connectionString))
             {
-                connection.Open();
-                string query = "INSERT INTO ChatMessages (Username, Message) VALUES (@username, @message)";
-                using (MySqlCommand cmd = new MySqlCommand(query, connection))
+                try
                 {
-                    cmd.Parameters.AddWithValue("@username", username);
-                    cmd.Parameters.AddWithValue("@message", message);
-                    cmd.ExecuteNonQuery();
+                    connection.Open();
+                    string query = "SELECT Username, IsOnline FROM Users";
+                    using (MySqlCommand command = new MySqlCommand(query, connection))
+                    {
+                        using (MySqlDataReader reader = command.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                string username = reader["Username"].ToString();
+                                bool isOnline = Convert.ToBoolean(reader["IsOnline"]);
+                                // Обновите статусы в UI
+                                UpdateUserStatusInUI(username, isOnline);
+                            }
+                        }
+                    }
                 }
-
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Ошибка обновления статусов: {ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
-
         }
 
+        private void UpdateUserStatusInUI(string username, bool isOnline)
+        {
+            // Реализуйте логику для обновления статуса в UI, например:
+            // 1. Найдите элемент в списке пользователей
+            // 2. Обновите текст или цвет, чтобы отразить статус (Online/Offline)
+            // Пример обновления статуса в списке пользователей:
+            foreach (ListViewItem item in .Items)
+            {
+                if (item.Text == username)
+                {
+                    item.SubItems[1].Text = isOnline ? "Online" : "Offline";
+                    item.SubItems[1].ForeColor = isOnline ? Color.Green : Color.Red;
+                    break;
+                }
+            }
+        }
+
+        private void UpdateOnlineStatus(string username, bool isOnline)
+        {
+            using (MySqlConnection connection = new MySqlConnection(connectionString))
+            {
+                try
+                {
+                    connection.Open();
+                    string query = "UPDATE Users SET IsOnline = @IsOnline WHERE Username = @Username";
+                    using (MySqlCommand command = new MySqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@Username", username);
+                        command.Parameters.AddWithValue("@IsOnline", isOnline ? 1 : 0);
+                        command.ExecuteNonQuery();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Ошибка обновления статуса: {ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
     }
 }
