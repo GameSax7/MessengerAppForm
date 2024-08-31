@@ -1,15 +1,17 @@
 ﻿using System;
 using System.Data;
+using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 using MySql.Data.MySqlClient;
-
+using System.Threading.Tasks;
 
 namespace MessengerAppForm
 {
     public partial class AllChatForm : Form
     {
-        private System.Windows.Forms.Timer timer;
+        private System.Windows.Forms.Timer chatTimer;
+        private System.Windows.Forms.Timer statusUpdateTimer;
         private string connectionString = "Server=188.225.45.127;Port=3306;Database=MessengerDB;User ID=root;Password=MessengerDB;";
         private string currentUser;
         private DateTime lastLoadedTimestamp = DateTime.MinValue;
@@ -24,38 +26,50 @@ namespace MessengerAppForm
 
         private void InitializeChat()
         {
-            timer = new System.Windows.Forms.Timer();
-            timer.Interval = 100; // Интервал в миллисекундах (например, 5000 мс = 5 секунд)
-            timer.Tick += new EventHandler(Timer_Tick);
-            timer.Start();
+            chatTimer = new System.Windows.Forms.Timer();
+            chatTimer.Interval = 1000; // Интервал в миллисекундах для обновления чата
+            chatTimer.Tick += new EventHandler(ChatTimer_Tick);
+            chatTimer.Start();
+
+            statusUpdateTimer = new System.Windows.Forms.Timer();
+            statusUpdateTimer.Interval = 100; // Интервал для обновления статусов
+            statusUpdateTimer.Tick += new EventHandler(StatusUpdateTimer_Tick);
+            statusUpdateTimer.Start();
         }
 
-        private void Timer_Tick(object sender, EventArgs e)
+        private async void ChatTimer_Tick(object sender, EventArgs e)
         {
-            LoadChatHistory();
+            await LoadNewChatMessagesAsync();
+        }
+
+        private async void StatusUpdateTimer_Tick(object sender, EventArgs e)
+        {
+            await UpdateUsersOnlineStatusAsync();
         }
 
         private void AllChatForm_Load(object sender, EventArgs e)
         {
+            InitializeChat(); // Инициализация таймеров
             // Обновляем статус онлайн при входе в приложение
             UpdateOnlineStatus(currentUser, true);
-            LoadChatHistory(); // Загружаем историю чата при открытии формы
+            LoadNewChatMessagesAsync(); // Загружаем новые сообщения при открытии формы
         }
+
         private void AllChatForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             // Обновляем статус оффлайн при закрытии формы
             UpdateOnlineStatus(currentUser, false);
+            chatTimer.Stop(); // Останавливаем таймер обновления чата
+            statusUpdateTimer.Stop(); // Останавливаем таймер обновления статусов
         }
-
-        private bool isUserScrolling = false; // Флаг для отслеживания, когда пользователь прокручивает вручную
-
-        private void LoadChatHistory()
+        private bool isFirstLoad = true;
+        private async Task LoadNewChatMessagesAsync()
         {
             using (MySqlConnection connection = new MySqlConnection(connectionString))
             {
                 try
                 {
-                    connection.Open();
+                    await connection.OpenAsync();
                     string query = @"
                 SELECT 
                     ChatMessages.Username AS ChatUsername, 
@@ -75,27 +89,27 @@ namespace MessengerAppForm
                     using (MySqlCommand command = new MySqlCommand(query, connection))
                     {
                         command.Parameters.AddWithValue("@lastLoadedTimestamp", lastLoadedTimestamp);
-                        using (MySqlDataReader reader = command.ExecuteReader())
+                        using (MySqlDataReader reader = (MySqlDataReader)await command.ExecuteReaderAsync())
                         {
-                            while (reader.Read())
+                            SuspendLayout(); // Отключаем перерисовку
+                            while (await reader.ReadAsync())
                             {
                                 string username = reader["ChatUsername"].ToString();
                                 string message = reader["Message"].ToString();
                                 DateTime timestamp = Convert.ToDateTime(reader["Timestamp"]);
-
                                 bool isOnline = Convert.ToBoolean(reader["IsOnline"]);
 
                                 // Вставляем временную метку
                                 txtChatHistory.SelectionColor = Color.Black;
                                 txtChatHistory.AppendText($"{timestamp} ");
 
-                                // Вставляем имя пользователя
+                                // Вставляем имя пользователя с синим цветом
                                 txtChatHistory.SelectionColor = Color.Blue;
                                 txtChatHistory.AppendText(username);
 
-                                // Вставляем статус (Online/Offline) с соответствующим цветом
+                                // Вставляем точку статуса (зеленую или красную) рядом с именем пользователя
                                 txtChatHistory.SelectionColor = isOnline ? Color.Green : Color.Red;
-                                txtChatHistory.AppendText(isOnline ? " (Online)" : " (Offline)");
+                                txtChatHistory.AppendText(" ● "); // Цветной символ точки
 
                                 // Вставляем сообщение
                                 txtChatHistory.SelectionColor = Color.Black;
@@ -106,6 +120,15 @@ namespace MessengerAppForm
                                     lastLoadedTimestamp = timestamp;
                                 }
                             }
+
+                            // Прокручиваем к концу текста только при первой загрузке
+                            if (isFirstLoad)
+                            {
+                                txtChatHistory.ScrollToCaret();
+                                isFirstLoad = false; // Сбрасываем флаг после первой загрузки
+                            }
+
+                            ResumeLayout(); // Включаем перерисовку
                         }
                     }
                 }
@@ -116,6 +139,12 @@ namespace MessengerAppForm
             }
         }
 
+        private async Task UpdateUsersOnlineStatusAsync()
+        {
+            // В данном примере метод остается пустым, так как статусы пользователей обновляются вместе с новыми сообщениями.
+            // Вы можете добавить логику для обновления статусов пользователей, если это необходимо.
+        }
+
         private void btnSendMessage_Click(object sender, EventArgs e)
         {
             string message = txtMessageInput.Text.Trim();
@@ -123,7 +152,6 @@ namespace MessengerAppForm
             {
                 SaveMessage(currentUser, message);
                 txtMessageInput.Clear(); // Очищаем поле ввода сообщения
-                LoadChatHistory(); // Обновляем историю чата после отправки сообщения
             }
         }
 
@@ -148,10 +176,9 @@ namespace MessengerAppForm
                     cmd.Parameters.AddWithValue("@message", message);
                     cmd.ExecuteNonQuery();
                 }
-
             }
-
         }
+
         public void UpdateOnlineStatus(string username, bool isOnline)
         {
             using (MySqlConnection connection = new MySqlConnection(connectionString))
@@ -173,6 +200,5 @@ namespace MessengerAppForm
                 }
             }
         }
-
     }
 }
