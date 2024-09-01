@@ -30,7 +30,7 @@
         {
             txtMessageInput = new TextBox();
             btnSendMessage = new Button();
-            txtChatHistory = new RichTextBox();
+            flowLayoutPanel = new FlowLayoutPanel();
             SuspendLayout();
             // 
             // txtMessageInput
@@ -39,6 +39,7 @@
             txtMessageInput.Name = "txtMessageInput";
             txtMessageInput.Size = new Size(645, 23);
             txtMessageInput.TabIndex = 0;
+            txtMessageInput.KeyDown += txtMessageInput_KeyDown;
             // 
             // btnSendMessage
             // 
@@ -50,13 +51,16 @@
             btnSendMessage.UseVisualStyleBackColor = true;
             btnSendMessage.Click += btnSendMessage_Click;
             // 
-            // txtChatHistory
+            // flowLayoutPanel
             // 
-            txtChatHistory.Location = new Point(37, 12);
-            txtChatHistory.Name = "txtChatHistory";
-            txtChatHistory.Size = new Size(736, 387);
-            txtChatHistory.TabIndex = 2;
-            txtChatHistory.Text = "";
+            flowLayoutPanel.AutoScroll = true;
+            flowLayoutPanel.Dock = DockStyle.Top;
+            flowLayoutPanel.FlowDirection = FlowDirection.TopDown;
+            flowLayoutPanel.Location = new Point(0, 0);
+            flowLayoutPanel.WrapContents = false;
+            flowLayoutPanel.Name = "flowLayoutPanel";
+            flowLayoutPanel.Size = new Size(800, 383);
+            flowLayoutPanel.TabIndex = 3;
             // 
             // AllChatForm
             // 
@@ -64,9 +68,9 @@
             AutoScaleMode = AutoScaleMode.Font;
             BackgroundImage = Properties.Resources.c1bd1867478f40319407319e9a38;
             ClientSize = new Size(800, 450);
-            Controls.Add(txtChatHistory);
             Controls.Add(btnSendMessage);
             Controls.Add(txtMessageInput);
+            Controls.Add(flowLayoutPanel);
             Name = "AllChatForm";
             Text = "AllChatForm";
             Load += AllChatForm_Load;
@@ -78,6 +82,6 @@
 
         private TextBox txtMessageInput;
         private Button btnSendMessage;
-        private RichTextBox txtChatHistory;
+        private FlowLayoutPanel flowLayoutPanel;
     }
 }
