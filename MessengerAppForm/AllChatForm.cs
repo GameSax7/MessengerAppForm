@@ -19,6 +19,7 @@ namespace MessengerAppForm
 
         private System.Windows.Forms.Timer chatTimer;
         private System.Windows.Forms.Timer statusUpdateTimer;
+        private System.Windows.Forms.Timer inactivityTimer; // Таймер для отслеживания бездействия
         private string connectionString = "Server=188.225.45.127;Port=3306;Database=MessengerDB;User ID=root;Password=MessengerDB;";
         private string currentUser;
         private DateTime lastLoadedTimestamp = DateTime.MinValue;
@@ -44,6 +45,11 @@ namespace MessengerAppForm
             statusUpdateTimer.Interval = 100;
             statusUpdateTimer.Tick += new EventHandler(StatusUpdateTimer_Tick);
             statusUpdateTimer.Start();
+
+            inactivityTimer = new System.Windows.Forms.Timer(); // Инициализация таймера бездействия
+            inactivityTimer.Interval = 300000; // 5 минут (300000 миллисекунд)
+            inactivityTimer.Tick += new EventHandler(InactivityTimer_Tick);
+            inactivityTimer.Start(); // Запуск таймера
         }
 
         private async void ChatTimer_Tick(object sender, EventArgs e)
@@ -56,20 +62,51 @@ namespace MessengerAppForm
             await UpdateUsersOnlineStatusAsync();
         }
 
+        private void InactivityTimer_Tick(object sender, EventArgs e)
+        {
+            UpdateOnlineStatus(currentUser, false); // Переводим пользователя в оффлайн
+            inactivityTimer.Stop(); // Останавливаем таймер после изменения статуса
+        }
+
         private void AllChatForm_Load(object sender, EventArgs e)
         {
             InitializeChat();
             UpdateOnlineStatus(currentUser, true);
+            SendSystemMessage($"{currentUser} вошел в чат.");
             LoadNewChatMessagesAsync();
         }
 
         private void AllChatForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             UpdateOnlineStatus(currentUser, false);
+            SendSystemMessage($"{currentUser} вышел из чата.");
             chatTimer.Stop();
             statusUpdateTimer.Stop();
+            inactivityTimer.Stop(); // Останавливаем таймер при закрытии формы
         }
-
+        private void SendSystemMessage(string message)
+        {
+            using (MySqlConnection connection = new MySqlConnection(connectionString))
+            {
+                try
+                {
+                    connection.Open();
+                    string query = "INSERT INTO ChatMessages (Username, Message, IsSystemMessage) VALUES (@username, @message, @isSystemMessage)";
+                    using (MySqlCommand cmd = new MySqlCommand(query, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@username", "Система");
+                        cmd.Parameters.AddWithValue("@message", message);
+                        cmd.Parameters.AddWithValue("@isSystemMessage", true);
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Ошибка отправки системного сообщения: {ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+        private int pageSize = 50; // Количество сообщений на одной странице
         private async Task LoadNewChatMessagesAsync()
         {
             using (MySqlConnection connection = new MySqlConnection(connectionString))
@@ -78,47 +115,55 @@ namespace MessengerAppForm
                 {
                     await connection.OpenAsync();
                     string query = @"
-                    SELECT 
-                        ChatMessages.Username AS ChatUsername, 
-                        ChatMessages.Message, 
-                        ChatMessages.Timestamp, 
-                        Users.IsOnline, 
-                        Users.ProfilePicture 
-                    FROM 
-                        ChatMessages 
-                    JOIN 
-                        Users 
-                    ON 
-                        ChatMessages.Username = Users.Username 
-                    WHERE 
-                        ChatMessages.Timestamp > @lastLoadedTimestamp 
-                    ORDER BY 
-                        ChatMessages.Timestamp ASC";
+                SELECT 
+                    ChatMessages.Username AS ChatUsername, 
+                    ChatMessages.Message, 
+                    ChatMessages.Timestamp, 
+                    Users.IsOnline, 
+                    Users.ProfilePicture,
+                    ChatMessages.IsSystemMessage 
+                FROM 
+                    ChatMessages 
+                LEFT JOIN 
+                    Users 
+                ON 
+                    ChatMessages.Username = Users.Username 
+                WHERE 
+                    ChatMessages.Timestamp > @lastLoadedTimestamp 
+                ORDER BY 
+                    ChatMessages.Timestamp ASC
+                LIMIT @pageSize";
 
                     using (MySqlCommand command = new MySqlCommand(query, connection))
                     {
                         command.Parameters.AddWithValue("@lastLoadedTimestamp", lastLoadedTimestamp);
+                        command.Parameters.AddWithValue("@pageSize", pageSize);
+
                         using (MySqlDataReader reader = (MySqlDataReader)await command.ExecuteReaderAsync())
                         {
-                            SuspendLayout();
+                            SuspendLayout(); // Отключаем перерисовку
                             while (await reader.ReadAsync())
                             {
                                 string username = reader["ChatUsername"].ToString();
                                 string message = reader["Message"].ToString();
                                 DateTime timestamp = Convert.ToDateTime(reader["Timestamp"]);
-                                bool isOnline = Convert.ToBoolean(reader["IsOnline"]);
-                                byte[] avatarBytes = reader["ProfilePicture"] as byte[];
+                                bool isOnline = reader["IsOnline"] != DBNull.Value && Convert.ToBoolean(reader["IsOnline"]);
+                                bool isSystemMessage = Convert.ToBoolean(reader["IsSystemMessage"]);
 
                                 Image avatar = null;
-                                if (avatarBytes != null && avatarBytes.Length > 0)
+                                if (!isSystemMessage)
                                 {
-                                    using (var ms = new MemoryStream(avatarBytes))
+                                    byte[] avatarBytes = reader["ProfilePicture"] as byte[];
+                                    if (avatarBytes != null && avatarBytes.Length > 0)
                                     {
-                                        avatar = Image.FromStream(ms);
+                                        using (var ms = new MemoryStream(avatarBytes))
+                                        {
+                                            avatar = Image.FromStream(ms);
+                                        }
                                     }
                                 }
 
-                                DisplayMessage(username, message, avatar, timestamp, isOnline);
+                                DisplayMessage(username, message, avatar, timestamp, isOnline, isSystemMessage);
 
                                 if (timestamp > lastLoadedTimestamp)
                                 {
@@ -126,13 +171,7 @@ namespace MessengerAppForm
                                 }
                             }
 
-                            if (isFirstLoad)
-                            {
-                                flowLayoutPanel.AutoScrollPosition = new Point(0, flowLayoutPanel.VerticalScroll.Maximum);
-                                isFirstLoad = false;
-                            }
-
-                            ResumeLayout();
+                            ResumeLayout(); // Включаем перерисовку
                         }
                     }
                 }
@@ -155,6 +194,11 @@ namespace MessengerAppForm
             {
                 SaveMessage(currentUser, message);
                 txtMessageInput.Clear();
+
+                // Перезапуск таймера бездействия при отправке сообщения
+                UpdateOnlineStatus(currentUser, true); // Подтверждаем, что пользователь активен
+                inactivityTimer.Stop();
+                inactivityTimer.Start();
             }
         }
 
@@ -194,11 +238,11 @@ namespace MessengerAppForm
             return newImage;
         }
 
-        private void DisplayMessage(string username, string message, Image avatar, DateTime timestamp, bool isOnline)
+        private void DisplayMessage(string username, string message, Image avatar, DateTime timestamp, bool isOnline, bool isSystemMessage)
         {
             if (InvokeRequired)
             {
-                Invoke(new Action(() => DisplayMessage(username, message, avatar, timestamp, isOnline)));
+                Invoke(new Action(() => DisplayMessage(username, message, avatar, timestamp, isOnline, isSystemMessage)));
                 return;
             }
 
@@ -207,7 +251,7 @@ namespace MessengerAppForm
                 Width = MessagePanelWidth,
                 Padding = new Padding(10),
                 Margin = new Padding(5),
-                BackColor = Color.WhiteSmoke,
+                BackColor = isSystemMessage ? Color.LightGray : Color.WhiteSmoke,
                 BorderStyle = BorderStyle.FixedSingle,
                 AutoSize = true,
                 AutoSizeMode = AutoSizeMode.GrowAndShrink
@@ -223,23 +267,29 @@ namespace MessengerAppForm
                 Margin = new Padding(0)
             };
 
-            innerPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, AvatarSize));
-            innerPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-            innerPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 30));
-            innerPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 100));
-
-            var avatarPictureBox = new PictureBox
+            if (!isSystemMessage)
             {
-                Image = avatar != null ? ResizeImage(avatar, AvatarSize, AvatarSize) : Properties.Resources.defaultAvatar,
-                Size = new Size(AvatarSize, AvatarSize),
-                SizeMode = PictureBoxSizeMode.Zoom,
-                Margin = new Padding(5),
-                BorderStyle = BorderStyle.None
-            };
+                innerPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, AvatarSize));
+                innerPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+                innerPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 30));
+                innerPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 100));
+
+                var avatarPictureBox = new PictureBox
+                {
+                    Image = avatar != null ? ResizeImage(avatar, AvatarSize, AvatarSize) : Properties.Resources.defaultAvatar,
+                    Size = new Size(AvatarSize, AvatarSize),
+                    SizeMode = PictureBoxSizeMode.Zoom,
+                    Margin = new Padding(5),
+                    BorderStyle = BorderStyle.None
+                };
+
+                innerPanel.Controls.Add(avatarPictureBox, 0, 0);
+                innerPanel.SetRowSpan(avatarPictureBox, 2);
+            }
 
             var usernameLabel = new Label
             {
-                Text = username,
+                Text = isSystemMessage ? "Система" : username,
                 Font = new Font("Segoe UI", 10, FontStyle.Bold),
                 AutoSize = true
             };
@@ -254,8 +304,8 @@ namespace MessengerAppForm
 
             var statusLabel = new Label
             {
-                Text = "●",
-                ForeColor = isOnline ? Color.Green : Color.Red,
+                Text = isSystemMessage ? string.Empty : "●",
+                ForeColor = isSystemMessage ? Color.Transparent : (isOnline ? Color.Green : Color.Red),
                 Font = new Font("Segoe UI", 12),
                 AutoSize = true,
                 TextAlign = ContentAlignment.MiddleCenter,
@@ -267,15 +317,12 @@ namespace MessengerAppForm
                 Text = message,
                 Font = new Font("Segoe UI", 9, FontStyle.Regular),
                 AutoSize = true,
-                MaximumSize = new Size(MessagePanelWidth - AvatarSize - 40, 0),
+                MaximumSize = new Size(MessagePanelWidth - (isSystemMessage ? 20 : AvatarSize + 40), 0),
                 TextAlign = ContentAlignment.TopLeft,
                 Padding = new Padding(5),
                 Margin = new Padding(5),
                 BackColor = Color.FromArgb(240, 240, 240)
             };
-
-            innerPanel.Controls.Add(avatarPictureBox, 0, 0);
-            innerPanel.SetRowSpan(avatarPictureBox, 2);
 
             innerPanel.Controls.Add(usernameLabel, 1, 0);
             innerPanel.Controls.Add(timestampLabel, 3, 0);
@@ -293,6 +340,7 @@ namespace MessengerAppForm
 
             flowLayoutPanel.ScrollControlIntoView(messagePanel);
         }
+
 
         public void UpdateOnlineStatus(string username, bool isOnline)
         {
